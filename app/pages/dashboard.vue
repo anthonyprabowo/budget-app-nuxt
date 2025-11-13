@@ -33,6 +33,7 @@
     <v-divider class="my-2"></v-divider>
     <div>
       <p class="text-h4 font-weight-bold">Expenditure</p>
+      
     </div>
   </BasicMain>
 </template>
