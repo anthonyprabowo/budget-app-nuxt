@@ -15,6 +15,17 @@ export default defineNuxtConfig({
       })
     },
   ],
+  runtimeConfig: {
+    public: {
+      NUXT_FB_API_KEY: process.env.NUXT_FB_API_KEY || '',
+      NUXT_FB_AUTH_DOMAIN: process.env.NUXT_FB_AUTH_DOMAIN || '',
+      NUXT_FB_PROJECT_ID: process.env.NUXT_FB_PROJECT_ID || '',
+      NUXT_FB_STORAGE_BUCKET: process.env.NUXT_FB_STORAGE_BUCKET || '',
+      NUXT_FB_MSG_SENDER_ID: process.env.NUXT_FB_MSG_SENDER_ID || '',
+      NUXT_FB_APP_ID: process.env.NUXT_FB_APP_ID || '',
+      NUXT_FB_MEASUREMENT_ID: process.env.NUXT_FB_MEASUREMENT_ID || '',
+    }
+  },
   vite: {
     vue: {
       template: {

@@ -22,3 +22,6 @@ logs
 .env
 .env.*
 !.env.example
+
+# Firebase Creds
+minty-budget-app-firebase-adminsdk-fbsvc-0fa2dba133.json
