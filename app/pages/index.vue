@@ -1,29 +1,64 @@
 <template>
-  <Header />
-  <BasicMain>
-    <div class="mb-8">
-      <h1 class="font-weight-bold">Your Monthly Budget</h1>
-      <p>Track purchases manually, or optionally connect a bank provider in Settings.</p>
-    </div>
-    <div class="d-block d-sm-flex ga-2 align-center justify-space-between">
-      <MainComponentDefaultCard title="Spend (this month)">
-        <p class="text-h5 font-weight-bold">$100.00</p>
-      </MainComponentDefaultCard>
-      <MainComponentDefaultCard title="Monthly Budget">
-        <p class="text-h5 font-weight-bold">-</p>
-      </MainComponentDefaultCard>
-      <MainComponentDefaultCard title="Purchases (this month)">
-        <p class="text-h5 font-weight-bold">0</p>
-      </MainComponentDefaultCard>
-    </div>
-    <v-divider class="mb-4" />
+  <div class="d-flex justify-center align-center" style="min-height: 100vh;">
     <div>
-      <PurchaseCard />
+      <v-img cover :width="300" :height="150" src="/logo/minty-budget-app-logo.png" />
+      <v-card max-width="420" class="pa-4">
+        <v-card-title class="text-h5 mb-4 text-center">
+          Sign in
+        </v-card-title>
+
+        <v-alert
+          v-if="errorMessage"
+          type="error"
+          class="mb-4"
+          density="compact"
+        >
+          {{ errorMessage }}
+        </v-alert>
+
+        <v-btn
+          block
+          color="primary"
+          :loading="loading"
+          @click="handleGoogleLogin"
+        >
+          Continue with Google
+        </v-btn>
+      </v-card>
     </div>
-  </BasicMain>
+  </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
+const router = useRouter();
+const route = useRoute();
+const { loginWithGoogle, isLoggedIn } = useAuth();
 
-  //
+const loading = ref(false);
+const errorMessage = ref("");
+
+// If already logged in, bounce away from /login
+watch(
+  isLoggedIn,
+  (val) => {
+    if (val) {
+      const redirect = (route.query.redirect as string) || "/dashboard";
+      router.push(redirect);
+    }
+  },
+  { immediate: true }
+);
+
+async function handleGoogleLogin() {
+  errorMessage.value = "";
+  loading.value = true;
+  try {
+    await loginWithGoogle();
+  } catch (err: any) {
+    console.error(err);
+    errorMessage.value = err?.message || "Failed to sign in with Google";
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
