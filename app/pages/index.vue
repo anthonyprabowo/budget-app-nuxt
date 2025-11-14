@@ -7,14 +7,13 @@
           Sign in
         </v-card-title>
 
-        <v-alert
-          v-if="errorMessage"
-          type="error"
-          class="mb-4"
-          density="compact"
+        <v-snackbar
+          color="error"
+          v-model="snackbarOpen"
+          location="top right"
         >
           {{ errorMessage }}
-        </v-alert>
+        </v-snackbar>
 
         <v-btn
           block
@@ -33,6 +32,7 @@
 const router = useRouter();
 const route = useRoute();
 const { loginWithGoogle, isLoggedIn } = useAuth();
+const snackbarOpen = ref<boolean>(false);
 
 const loading = ref(false);
 const errorMessage = ref("");
@@ -56,7 +56,8 @@ async function handleGoogleLogin() {
     await loginWithGoogle();
   } catch (err: any) {
     console.error(err);
-    errorMessage.value = err?.message || "Failed to sign in with Google";
+    errorMessage.value = err.message ?? "Failed to sign in with Google";
+    snackbarOpen.value = true;
   } finally {
     loading.value = false;
   }

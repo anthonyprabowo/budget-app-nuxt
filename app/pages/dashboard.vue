@@ -6,7 +6,7 @@
       <p>Track purchases manually, or optionally connect a bank provider in Settings.</p>
     </div>
     <div class="d-block d-sm-flex ga-2 align-center justify-space-between mb-4">
-      <MainComponentDefaultCard title="Spend (this month)" icon="mdi-wallet-bifold-outline" icon-color="secondary">
+      <MainComponentDefaultCard title="Monthly budget" icon="mdi-wallet-bifold-outline" icon-color="deep-purple-lighten-2">
         <p class="text-h4 font-weight-bold mb-1">$100.00</p>
         <p class="text-body-2 text-grey">Total budget allocated</p>
       </MainComponentDefaultCard>
@@ -32,14 +32,49 @@
     </div>
     <v-divider class="my-2"></v-divider>
     <div>
-      <p class="text-h4 font-weight-bold">Expenditure</p>
-      
+      <p class="text-h4 font-weight-bold mb-2">Expenditure</p>
+      <ExpenditureMainComponent :transaction-data="DummyData"/>
     </div>
   </BasicMain>
 </template>
 
 <script lang="ts" setup>
+  import type { TransactionData } from '~/types/transaction';
+
   definePageMeta({
     middleware: 'auth'
   })
+
+  const DummyData: TransactionData[] = [
+    {
+      Date: 'Nov 13',
+      Description: "Car payment",
+      Category: 'other',
+      Amount: 1650
+    },
+    {
+      Date: 'Nov 13',
+      Description: "Movie ticket",
+      Category: 'entertainment',
+      Amount: 100
+    },
+    {
+      Date: 'Nov 13',
+      Description: "Doctor visit",
+      Category: 'health',
+      Amount: 500
+    },
+    {
+      Date: 'Nov 13',
+      Description: "Date night",
+      Category: 'food',
+      Amount: 400
+    },
+    {
+      Date: 'Nov 13',
+      Description: "Necklace",
+      Category: 'shopping',
+      Amount: 50
+    },
+  ]
 </script>
