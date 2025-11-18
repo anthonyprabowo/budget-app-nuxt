@@ -19,10 +19,10 @@
                 </thead>
                 <tbody>
                     <tr v-for="(data, i) in transactionData" :key="i">
-                        <td>{{ data.Date }}</td>
-                        <td><v-icon size="x-small" class="mr-2" v-if="findIcon(data.Category) !== ''">{{ findIcon(data.Category) }}</v-icon>{{ data.Description }}</td>
-                        <td>{{ data.Category }}</td>
-                        <td>{{ formatCurrency(data.Amount) }}</td>
+                        <td>{{ data.date }}</td>
+                        <td><v-icon size="x-small" class="mr-2" v-if="findIcon(data.category) !== ''">{{ findIcon(data.category) }}</v-icon>{{ data.name }}</td>
+                        <td>{{ data.category }}</td>
+                        <td>{{ formatCurrency(data.amount) }}</td>
                     </tr>
                 </tbody>
             </v-table>
@@ -52,7 +52,7 @@
                 return 'mdi-silverware'
             case 'shopping':
                 return 'mdi-shopping-outline'
-            case 'transporation':
+            case 'transportation':
                 return 'mdi-car-outline'
             case 'utilities':
                 return 'mdi-lightning-bold-outline'

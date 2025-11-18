@@ -9,7 +9,7 @@ export function useCurrency(locale: string = 'en-US', currency: string = 'USD') 
       style: 'currency',
       currency,
       minimumFractionDigits: 2
-    }).format(number);
+    }).format(Math.abs(number));
   };
 
   return { formatCurrency };

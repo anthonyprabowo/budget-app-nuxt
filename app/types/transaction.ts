@@ -1,6 +1,17 @@
 export interface TransactionData {
-    Date: string;
-    Description: string;
-    Category: string;
-    Amount: number;
+  transactionId: string;
+  name: string;
+  amount: number;
+  date: string;
+
+  isoCurrencyCode?: string | null;
+  unofficialCurrencyCode?: string | null;
+  merchantName?: string | null;
+
+  category: AppCategory;
+  paymentChannel?: string;
+  pending?: boolean;
+  accountId: string;
 }
+
+export type AppCategory = 'food' | 'shopping' | 'health' | 'entertainment' | 'other' | 'transportation' | 'utilities'

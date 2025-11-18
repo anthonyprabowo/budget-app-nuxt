@@ -20,9 +20,21 @@ onMounted(async () => {
 
   plaidHandler = Plaid.create({
     token: linkToken.value,
-    onSuccess(public_token, metadata) {
+    async onSuccess(public_token, metadata) {
       console.log("SUCCESS!", public_token, metadata)
       // TODO: connect with exchange token API
+      try {
+        await $fetch("/api/plaid/exchange-public-token", {
+          method: "POST",
+          body: {
+            public_token,
+            metadata,
+          },
+        })
+        console.log("Saved Plaid access token in Firestore")
+      } catch (err) {
+        console.error("Error saving Plaid access token:", err)
+      }
     },
     onExit(err, metadata) {
       console.log("EXIT", err, metadata)

@@ -12,7 +12,7 @@
         <p class="text-body-2 text-grey">Total budget allocated</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Total Spent" icon="mdi-trending-down" icon-color="error">
-        <p class="text-h4 font-weight-bold mb-1">$100.00</p>
+        <p class="text-h4 font-weight-bold mb-1">${{ transactionData.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) }}</p>
         <p class="text-body-2 text-grey">100% of budget used</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Remaining" icon="mdi-trending-up" icon-color="green">
@@ -34,7 +34,7 @@
     <v-divider class="my-2"></v-divider>
     <div>
       <p class="text-h4 font-weight-bold mb-2">Expenditure</p>
-      <ExpenditureMainComponent :transaction-data="DummyData"/>
+      <ExpenditureMainComponent :transaction-data="transactionData"/>
     </div>
   </BasicMain>
 </template>
@@ -54,37 +54,20 @@
       }
     ]
   })
+  
 
-  const DummyData: TransactionData[] = [
-    {
-      Date: 'Nov 13',
-      Description: "Car payment",
-      Category: 'other',
-      Amount: 1650
-    },
-    {
-      Date: 'Nov 13',
-      Description: "Movie ticket",
-      Category: 'entertainment',
-      Amount: 100
-    },
-    {
-      Date: 'Nov 13',
-      Description: "Doctor visit",
-      Category: 'health',
-      Amount: 500
-    },
-    {
-      Date: 'Nov 13',
-      Description: "Date night",
-      Category: 'food',
-      Amount: 400
-    },
-    {
-      Date: 'Nov 13',
-      Description: "Necklace",
-      Category: 'shopping',
-      Amount: 50
-    },
-  ]
+  const transactionData = ref<TransactionData[]>([]);
+
+  onMounted(async () => {
+    try {
+      var transactions = await $fetch('/api/plaid/transaction', {
+        method: "GET",
+      });
+      transactionData.value = transactions.transactions
+      console.log(transactionData.value);
+    }
+    catch(e) {
+      console.log(e);
+    }
+  })
 </script>
