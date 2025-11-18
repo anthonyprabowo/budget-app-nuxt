@@ -2,6 +2,7 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import serviceAccount from './minty-budget-app-firebase-adminsdk-fbsvc-0fa2dba133.json'
+import { getFirestore } from 'firebase-admin/firestore'
 
 const app = getApps().length
   ? getApps()[0]
@@ -10,3 +11,4 @@ const app = getApps().length
     })
 
 export const adminAuth = () => getAuth(app)
+export const adminDb = getFirestore(app)

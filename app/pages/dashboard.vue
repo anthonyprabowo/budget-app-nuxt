@@ -1,5 +1,6 @@
 <template>
   <Header />
+  <PlaidConnectButton />
   <BasicMain>
     <div class="mb-8">
       <h1 class="font-weight-bold">Your Monthly Budget</h1>
@@ -43,6 +44,15 @@
 
   definePageMeta({
     middleware: 'auth'
+  })
+
+  useHead({
+    script: [
+      {
+        src: "https://cdn.plaid.com/link/v2/stable/link-initialize.js",
+        defer: true
+      }
+    ]
   })
 
   const DummyData: TransactionData[] = [

@@ -6,6 +6,7 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
+import type { FetchError } from 'ofetch';
 
 const userState = ref<User | null>(null);
 let initialized = false;
@@ -44,15 +45,29 @@ export function useAuth() {
     const provider = new GoogleAuthProvider();
     const cred = await signInWithPopup(auth, provider);
     const email = cred.user.email;
+    const idToken = await cred.user.getIdToken();
 
-    if (!isEmailAllowed(email)) {
+    // if (!isEmailAllowed(email)) {
+    //   await signOut(auth);
+    //   throw new Error("This Google account is not allowed to access this app.");
+    // }
+
+    try {
+      await $fetch('/api/auth/login', {
+        method: 'POST',
+        body: { idToken }
+      })
+    } catch(err) {
+      const e = err as FetchError
       await signOut(auth);
-      throw new Error("This Google account is not allowed to access this app.");
+      console.log(e.statusCode);
+      throw new Error(e.message);
     }
   }
 
   async function logout() {
     await signOut(auth);
+    await $fetch('/api/auth/logout', { method: 'POST' })
   }
 
   async function getIdToken() {
