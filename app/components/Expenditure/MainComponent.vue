@@ -8,24 +8,42 @@
         </div>
         <MainComponentDefaultCard title="Recent Transaction" title-text-size="h5" card-type="outlined" card-color="secondary">
             <p class="text-body-2 text-grey mb-2">Your monthly transaction</p>
-            <v-table height="300px" v-if="transactionData.length > 0">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(data, i) in transactionData" :key="i">
-                        <td>{{ data.date }}</td>
-                        <td><v-icon size="x-small" class="mr-2" v-if="findIcon(data.category) !== ''">{{ findIcon(data.category) }}</v-icon>{{ data.name }}</td>
-                        <td>{{ data.category }}</td>
-                        <td>{{ formatCurrency(data.amount) }}</td>
-                    </tr>
-                </tbody>
-            </v-table>
+            <v-data-table
+                v-if="transactionData.length > 0"
+                :headers="headers"
+                :items="transactionData"
+                :items-per-page="5"
+                mobile-breakpoint="sm"
+                class="text-body-2"
+                height="400px"
+            >
+                <!-- Date -->
+                <template #item.date="{ item }">
+                {{ item.date }}
+                </template>
+
+                <!-- Description + icon -->
+                <template #item.description="{ item }">
+                <v-icon
+                    size="x-small"
+                    class="mr-2"
+                    v-if="findIcon(item.category) !== ''"
+                >
+                    {{ findIcon(item.category) }}
+                </v-icon>
+                {{ item.name }}
+                </template>
+
+                <!-- Category -->
+                <template #item.category="{ item }">
+                {{ item.category }}
+                </template>
+
+                <!-- Amount -->
+                <template #item.amount="{ item }">
+                {{ formatCurrency(item.amount) }}
+                </template>
+            </v-data-table>
             <p v-else class=" text-primary font-weight-bold d-flex align-center justify-center" style="height: 300px">No Data Found</p>
         </MainComponentDefaultCard>
     </div>    
@@ -42,6 +60,13 @@
             required: true,
         }
     })
+
+    const headers = [
+        { title: 'Date',        key: 'date' },
+        { title: 'Description', key: 'description' },
+        { title: 'Category',    key: 'category' },
+        { title: 'Amount',      key: 'amount' },
+    ];
 
     function findIcon(category: string) {
         switch(category) {

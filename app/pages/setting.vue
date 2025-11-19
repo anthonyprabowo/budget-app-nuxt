@@ -1,10 +1,10 @@
 <template>
     <v-snackbar
-        color="error"
+        :color="snackbarColor"
         v-model="snackbarOpen"
         location="top right"
     >
-        {{ errorMessage }}
+        {{ snackbarMessage }}
     </v-snackbar>
     <Header />
     <BasicMain>
@@ -60,7 +60,7 @@
             </MainComponentDefaultCard>
         </div>
         <div class="mb-4">
-            <MainComponentDefaultCard title="Bank Balance" title-text-size="h6" icon="mdi-currency-usd" icon-color="green" class="mt-4">
+            <MainComponentDefaultCard title="Bank Balance" title-text-size="h6" icon="mdi-currency-usd" icon-color="green">
                 <p class="text-grey text-body-2 mb-4">Your current account balance</p>
 
                 <v-alert icon="mdi-information-outline" title="Not Connected" variant="elevated" class="mb-4 alert-balance" v-if="!isBankConnected">
@@ -80,11 +80,22 @@
 
             </MainComponentDefaultCard>
         </div>
+        <div class="mb-4">
+            <MainComponentDefaultCard title="Account Setting" icon="mdi-account-cog-outline" title-text-size="h6">
+                <p class="text-grey text-body-2 mb-4">Manage your Minty Budget account preferences</p>
+
+                <MainComponentDefaultCard title="Adjust Monthly Budget" card-type="outlined">
+                    <v-number-input prepend-inner-icon="mdi-currency-usd" label="Monthly Budget" variant="outlined" v-model="monthlyBudget" hide-details class="my-4" />
+                    <v-btn color="secondary" class="w-100 font-weight-bold" @click="saveMonthlyBudget">Save Monthly Budget</v-btn>
+                </MainComponentDefaultCard>
+            </MainComponentDefaultCard>
+        </div>
     </BasicMain>
 </template>
 
 <script lang="ts" setup>
     import type { FetchError } from 'ofetch';
+import type { BalanceApi } from '~/types/balance';
 
     definePageMeta({
         middleware: 'auth'
@@ -92,10 +103,25 @@
 
     const isBankConnected = ref<boolean>(false);
     const snackbarOpen = ref<boolean>(false);
-    const errorMessage = ref<string>('');
+    const snackbarMessage = ref<string>('');
     const availableBalance = ref<number>(0);
     const currentBalance = ref<number>(0);
     const { formatCurrency } = useCurrency();
+    const monthlyBudget = ref<number>(0);
+    const snackbarColor = ref<string>('error');
+
+
+    // onBeforeMount(async () => {
+    //    try {
+    //         await getSetting();
+    //     }
+    //     catch(err) {
+    //         const e = err as FetchError;
+    //         snackbarOpen.value = true;
+    //         console.log(e.statusCode);
+    //         errorMessage.value = e.message;
+    //     }
+    // })
 
     onMounted(async () => {
         try {
@@ -103,9 +129,8 @@
         }
         catch(err) {
             const e = err as FetchError;
-            snackbarOpen.value = true;
             console.log(e.statusCode);
-            errorMessage.value = e.message;
+            addSnackBar('error', e.message);
         }
     })
 
@@ -117,7 +142,9 @@
         isBankConnected.value = checkBank.verified;
 
         if(isBankConnected.value) {
-            var getBalance = await $fetch('/api/plaid/balance', {
+            var getBalance = await $fetch<{
+                accounts: BalanceApi[]
+            }>('/api/plaid/balance', {
                 method: 'GET'
             });
 
@@ -125,10 +152,47 @@
 
             currentBalance.value = getBalance.accounts.reduce((sum, data) => sum + Math.abs(data.current as number), 0)
         }
+
+        var getMonthlyBudget = await $fetch<{monthlyBudget: number}>('/api/account/get-user-monthly-budget', {
+            method: 'GET',
+        });
+
+        monthlyBudget.value = getMonthlyBudget.monthlyBudget;
     }
 
     async function refreshSetting() {
         await getSetting();
+    }
+
+    async function saveMonthlyBudget() {
+        if(monthlyBudget.value === 0 || monthlyBudget.value < 0) {
+            addSnackBar('error', "Monthly budget cannot be or less than 0")
+        }
+        else
+        {
+            try {
+                await $fetch('/api/account/save-user-monthly-budget', {
+                    method: 'POST',
+                    body: {
+                        monthlyBudget: monthlyBudget.value,
+                    }
+                })
+
+                addSnackBar("success", "Monthly budget successfully saved!");
+            }
+            catch(err) {
+                const e = err as FetchError;
+                console.log(e.statusCode);
+                addSnackBar("error", e.message);
+            }
+        }
+        
+    }
+
+    function addSnackBar(color: string, message: string) {
+        snackbarOpen.value = true;
+        snackbarColor.value = color;
+        snackbarMessage.value = message;
     }
     
 </script>
