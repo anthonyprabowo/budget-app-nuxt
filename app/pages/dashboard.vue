@@ -73,7 +73,7 @@
   const monthlyBudget = ref<number>(0);
   const totalSpend = ref<number>(0);
   const totalRemaining = ref<number>(0);
-  const percentageCalculation = ref<number>(0);
+  const percentageCalculation = ref<string>('');
   const { formatCurrency } = useCurrency();
 
   onMounted(async () => {
