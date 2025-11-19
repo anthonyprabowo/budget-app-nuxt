@@ -31,29 +31,30 @@
 <script setup lang="ts">
 const router = useRouter();
 const route = useRoute();
-const { loginWithGoogle, isLoggedIn } = useAuth();
+const { loginWithGoogle, isLoggedIn, waitForAuthReady } = useAuth();
 const snackbarOpen = ref<boolean>(false);
 
 const loading = ref(false);
 const errorMessage = ref("");
 
-// If already logged in, bounce away from /login
-watch(
-  isLoggedIn,
-  (val) => {
-    if (val) {
-      const redirect = (route.query.redirect as string) || "/dashboard";
-      router.push(redirect);
-    }
-  },
-  { immediate: true }
-);
+onMounted(async () => {
+  await waitForAuthReady();
+  if (isLoggedIn.value) {
+    const redirect = (route.query.redirect as string) || "/dashboard";
+    router.push(redirect);
+  }
+});
 
 async function handleGoogleLogin() {
   errorMessage.value = "";
   loading.value = true;
   try {
     await loginWithGoogle();
+
+    await waitForAuthReady();
+
+    const redirect = (route.query.redirect as string) || "/dashboard";
+    router.push(redirect);
   } catch (err: any) {
     console.error(err);
     errorMessage.value = err.message ?? "Failed to sign in with Google";

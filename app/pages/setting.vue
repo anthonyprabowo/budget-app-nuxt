@@ -83,11 +83,18 @@
         <div class="mb-4" id="account-setting">
             <MainComponentDefaultCard title="Account Setting" icon="mdi-account-cog-outline" title-text-size="h6">
                 <p class="text-grey text-body-2 mb-4">Manage your Minty Budget account preferences</p>
-
-                <MainComponentDefaultCard title="Adjust Monthly Budget" card-type="outlined">
-                    <v-number-input prepend-inner-icon="mdi-currency-usd" label="Monthly Budget" variant="outlined" v-model="monthlyBudget" hide-details class="my-4" />
-                    <v-btn color="secondary" class="w-100 font-weight-bold" @click="saveMonthlyBudget">Save Monthly Budget</v-btn>
-                </MainComponentDefaultCard>
+                <div class="mb-4">
+                    <MainComponentDefaultCard title="Adjust Monthly Budget" card-type="outlined">
+                        <v-number-input prepend-inner-icon="mdi-currency-usd" label="Monthly Budget" variant="outlined" v-model="monthlyBudget" hide-details class="my-4" />
+                        <v-btn color="secondary" class="w-100 font-weight-bold" @click="saveMonthlyBudget">Save Monthly Budget</v-btn>
+                    </MainComponentDefaultCard>
+                </div>
+                <div>
+                    <MainComponentDefaultCard title="Logout" card-type="outlined" icon="mdi-logout" icon-color="red" card-color="red">
+                        <p class="text-grey text-body-2 mb-4">Logout from your Minty Budget account</p>
+                        <v-btn color="red" @click="logout" prepend-icon="mdi-logout-variant" class="font-weight-bold">Logout</v-btn>
+                    </MainComponentDefaultCard>
+                </div>
             </MainComponentDefaultCard>
         </div>
     </BasicMain>
@@ -109,6 +116,7 @@ import type { BalanceApi } from '~/types/balance';
     const { formatCurrency } = useCurrency();
     const monthlyBudget = ref<number>(0);
     const snackbarColor = ref<string>('error');
+    const { logout } = useAuth();
 
 
     // onBeforeMount(async () => {

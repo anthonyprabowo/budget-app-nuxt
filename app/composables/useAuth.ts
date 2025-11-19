@@ -66,8 +66,16 @@ export function useAuth() {
   }
 
   async function logout() {
-    await signOut(auth);
-    await $fetch('/api/auth/logout', { method: 'POST' })
+    try {
+      await signOut(auth);
+      await $fetch('/api/auth/logout', { method: 'POST' })
+
+      const router = useRouter();
+      router.push('/');
+    } catch(e) {
+      console.log(e);
+    }
+    
   }
 
   async function getIdToken() {
