@@ -80,7 +80,7 @@
 
             </MainComponentDefaultCard>
         </div>
-        <div class="mb-4">
+        <div class="mb-4" id="account-setting">
             <MainComponentDefaultCard title="Account Setting" icon="mdi-account-cog-outline" title-text-size="h6">
                 <p class="text-grey text-body-2 mb-4">Manage your Minty Budget account preferences</p>
 
