@@ -1,6 +1,5 @@
 <template>
   <Header />
-  <PlaidConnectButton />
   <BasicMain>
     <div class="mb-8">
       <h1 class="font-weight-bold">Your Monthly Budget</h1>
@@ -8,15 +7,15 @@
     </div>
     <div class="d-block d-sm-flex ga-2 align-center justify-space-between mb-4">
       <MainComponentDefaultCard title="Monthly budget" icon="mdi-wallet-bifold-outline" icon-color="deep-purple-lighten-2">
-        <p class="text-h4 font-weight-bold mb-1">$100.00</p>
+        <p class="text-h4 font-weight-bold mb-1">-</p>
         <p class="text-body-2 text-grey">Total budget allocated</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Total Spent" icon="mdi-trending-down" icon-color="error">
-        <p class="text-h4 font-weight-bold mb-1">${{ transactionData.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) }}</p>
+        <p class="text-h4 font-weight-bold mb-1">{{ transactionData.length > 0 ? '$' + transactionData.reduce((sum, tx) => sum + Math.abs(tx.amount), 0) : '-' }}</p>
         <p class="text-body-2 text-grey">100% of budget used</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Remaining" icon="mdi-trending-up" icon-color="green">
-        <p class="text-h4 font-weight-bold mb-1">$0.00</p>
+        <p class="text-h4 font-weight-bold mb-1">-</p>
         <!-- If over budget, the text becomes "Over budget" -->
         <p class="text-body-2 text-grey">Left to spend</p>
       </MainComponentDefaultCard>
@@ -24,10 +23,10 @@
     <div class="mb-4">
       <MainComponentDefaultCard title="Spending Progress" title-text-size="h5">
         <p class="text-body-2 text-grey mb-2">You've spent 100.0% of your monthly budget</p>
-        <v-progress-linear model-value="100" :height="12" rounded color="secondary" class="mb-2"></v-progress-linear>
+        <v-progress-linear model-value="0" :height="12" rounded color="secondary" class="mb-2"></v-progress-linear>
         <div class="d-flex justify-space-between align-center">
           <p class="text-body-1">$0</p>
-          <p class="text-body-1">$100.00</p>
+          <p class="text-body-1">-</p>
         </div>
       </MainComponentDefaultCard>
     </div>

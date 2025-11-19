@@ -1,12 +1,18 @@
 // middleware/auth.ts
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (!to.path.startsWith("/dashboard")) return;
+  // Only protect these routes
+  const protectedRoutes = ["/dashboard", "/setting"];
 
+  // If route doesn't start with any of them, skip
+  if (!protectedRoutes.some(path => to.path.startsWith(path))) {
+    return;
+  }
+
+  // Server render always passes (auth happens only on client)
   if (import.meta.server) return;
 
   const { isLoggedIn, waitForAuthReady } = useAuth();
 
-  // Wait until Firebase auth finishes initializing
   await waitForAuthReady();
 
   if (!isLoggedIn.value) {

@@ -1,10 +1,10 @@
 <template>
-  <button 
-    class="px-4 py-2 bg-blue-600 text-white rounded"
+  <v-btn 
+    color="purple-accent-3"
     @click="openPlaid"
   >
     Connect your bank
-  </button>
+  </v-btn>
 </template>
 
 <script setup lang="js">
@@ -35,12 +35,15 @@ onMounted(async () => {
       } catch (err) {
         console.error("Error saving Plaid access token:", err)
       }
+      emit('refreshSetting');
     },
     onExit(err, metadata) {
       console.log("EXIT", err, metadata)
     }
   })
 })
+
+const emit = defineEmits(['refreshSetting'])
 
 const openPlaid = () => {
   if (!plaidHandler) return

@@ -8,7 +8,7 @@
         </div>
         <MainComponentDefaultCard title="Recent Transaction" title-text-size="h5" card-type="outlined" card-color="secondary">
             <p class="text-body-2 text-grey mb-2">Your monthly transaction</p>
-            <v-table height="300px">
+            <v-table height="300px" v-if="transactionData.length > 0">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -26,6 +26,7 @@
                     </tr>
                 </tbody>
             </v-table>
+            <p v-else class=" text-primary font-weight-bold d-flex align-center justify-center" style="height: 300px">No Data Found</p>
         </MainComponentDefaultCard>
     </div>    
 </template>
