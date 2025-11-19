@@ -67,7 +67,7 @@
                     <p class="text-caption">Connect your bank account above to see your real-time balance here.</p>
                 </v-alert>
 
-                <div class="d-flex align-center ga-2">
+                <div class="d-block d-sm-flex align-center ga-2">
                     <MainComponentDefaultCard title="Current Balance" card-type="outlined">
                         <p class="text-h6 font-weight-bold text-lime" v-if="!isBankConnected">Not Connected</p>
                         <p class="text-h6 font-weight-bold text-lime" v-else>{{ formatCurrency(currentBalance) }}</p>
