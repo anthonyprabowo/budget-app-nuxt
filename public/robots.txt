@@ -1,2 +1,13 @@
-User-Agent: *
-Disallow:
+User-agent: *
+# Block all JS files
+Disallow: /*.js$
+
+# Block all CSS files
+Disallow: /*.css$
+
+# Block private sections
+Disallow: /dashboard
+Disallow: /setting
+
+# Allow everything else
+Allow: /
