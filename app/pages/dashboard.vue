@@ -41,9 +41,12 @@
       </MainComponentDefaultCard>
     </div>
     <v-divider class="my-2"></v-divider>
-    <div>
+    <div class="mb-2">
       <p class="text-h4 font-weight-bold mb-2">Expenditure</p>
       <ExpenditureMainComponent :transaction-data="transactionData"/>
+    </div>
+    <div>
+      <ExpenditureDonutGraph :transaction-data="transactionData" />
     </div>
   </BasicMain>
 </template>
