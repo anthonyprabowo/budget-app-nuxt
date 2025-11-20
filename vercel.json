@@ -3,7 +3,7 @@
     "crons": [
         {
         "path": "/api/cron/update-bank-balance",
-        "schedule": "* * * * *"
+        "schedule": "0 0 * * *"
         }
     ]
 }
