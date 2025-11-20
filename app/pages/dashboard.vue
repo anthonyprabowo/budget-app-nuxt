@@ -12,7 +12,7 @@
       <h1 class="font-weight-bold">Your Monthly Budget</h1>
       <p>Track purchases manually, or optionally connect a bank provider in Settings.</p>
     </div>
-    <div class="d-block d-sm-flex ga-2 align-center justify-space-between mb-4">
+    <div class="d-block d-sm-flex ga-2 align-stretch justify-space-between mb-4">
       <MainComponentDefaultCard title="Monthly budget" icon="mdi-wallet-bifold-outline" icon-color="deep-purple-lighten-2">
         <p class="text-h4 font-weight-bold mb-1">{{ monthlyBudget === 0 ? '-' : formatCurrency(monthlyBudget) }}</p>
         <p class="text-body-2 text-grey mb-4">Total budget allocated</p>
@@ -22,7 +22,7 @@
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Total Spent" icon="mdi-trending-down" icon-color="error">
         <p class="text-h4 font-weight-bold mb-1">{{ transactionData.length > 0 ? formatCurrency(totalSpend) : '-' }}</p>
-        <p class="text-body-2 text-grey">100% of budget used</p>
+        <p class="text-body-2 text-grey">{{ percentageCalculation }}% of budget used</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Remaining" icon="mdi-trending-up" icon-color="green">
         <p class="text-h4 font-weight-bold mb-1" :class="{'text-red': totalRemaining < 0}">{{ totalRemaining < 0 ? '-' : '' }}{{ formatCurrency(totalRemaining) }}</p>
@@ -85,6 +85,7 @@
         method: "GET",
       });
       if(transactions.ok) {
+        // @ts-ignore
         transactionData.value = transactions.transactions
         totalSpend.value = transactionData.value.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
       }
@@ -98,7 +99,7 @@
       monthlyBudget.value = budget.monthlyBudget
 
       totalRemaining.value = monthlyBudget.value - totalSpend.value;
-      percentageCalculation.value = ((totalSpend.value/monthlyBudget.value) * 100).toFixed(2)
+      percentageCalculation.value = ((totalSpend.value/(monthlyBudget.value === 0 ? 1 : monthlyBudget.value)) * 100).toFixed(2)
     }
     catch(err) {
       const e = err as FetchError

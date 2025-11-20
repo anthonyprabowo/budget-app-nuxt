@@ -120,18 +120,29 @@ export default defineEventHandler(async (event) => {
     const { transactions } = plaidRes.data
 
     const filtered = transactions.filter((t) => {
-    const primary = t.personal_finance_category?.primary as string | undefined
-    const detailed = t.personal_finance_category?.detailed as string | undefined
-    const categories: string[] = t.category ?? []
+      const primary = t.personal_finance_category?.primary as string | undefined
+      const detailed = t.personal_finance_category?.detailed as string | undefined
+      const categories: string[] = t.category ?? []
+      const txType = (t.transaction_type || '').toLowerCase()
 
-    if (primary === 'INCOME') return false
+      if (primary === 'INCOME') return false
 
-    if (detailed?.includes('DIRECT_DEPOSIT')) return false
-    if (categories.includes('Payroll')) return false
-    if (categories.includes('Direct Deposit')) return false
+      if (detailed?.includes('DIRECT_DEPOSIT')) return false
+      if (categories.includes('Payroll')) return false
+      if (categories.includes('Direct Deposit')) return false
 
-    // keep everything else
-    return true
+      const isMoneyMarketTransferByName =
+        name.includes('money market') && name.includes('transfer')
+
+      const isMoneyMarketTransferByType =
+        txType === 'transfer' && name.includes('money market')
+
+      if (isMoneyMarketTransferByName || isMoneyMarketTransferByType) {
+        return false
+      }
+
+      // keep everything else
+      return true
     })
 
 

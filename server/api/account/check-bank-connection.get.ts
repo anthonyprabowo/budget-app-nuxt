@@ -10,7 +10,5 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    const verified = user.plaid && user.plaid.access_token !== '';
-
-    return { verified  }
+    return { verified: user.plaid && user.plaid.access_token !== '' }
 })
