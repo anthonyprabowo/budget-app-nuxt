@@ -123,6 +123,7 @@ export default defineEventHandler(async (event) => {
       const primary = t.personal_finance_category?.primary as string | undefined
       const detailed = t.personal_finance_category?.detailed as string | undefined
       const categories: string[] = t.category ?? []
+      const name = (t.name || '').toLowerCase()
       const txType = (t.transaction_type || '').toLowerCase()
 
       if (primary === 'INCOME') return false
