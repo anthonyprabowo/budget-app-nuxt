@@ -5,7 +5,7 @@ const path = require('node:path');
 // 👇 adjust path to your service account JSON
 const serviceAccount = require(path.join(
   __dirname,
-  '../minty-budget-app-firebase-adminsdk-fbsvc-0fa2dba133.json'
+  '../minty-budget-app-dev-firebase-adminsdk-fbsvc-f7306b3d71.json'
 ));
 
 const { v4 } = require('uuid');

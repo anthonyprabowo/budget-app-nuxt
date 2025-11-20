@@ -84,8 +84,11 @@
       var transactions = await $fetch('/api/plaid/transaction', {
         method: "GET",
       });
-      transactionData.value = transactions.transactions
-      totalSpend.value = transactionData.value.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+      if(transactions.ok) {
+        transactionData.value = transactions.transactions
+        totalSpend.value = transactionData.value.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+      }
+      
       
 
       var budget = await $fetch<{monthlyBudget: number}>('/api/account/get-user-monthly-budget', {
@@ -100,7 +103,7 @@
     catch(err) {
       const e = err as FetchError
       console.log(e.statusCode);
-      addSnackBar("error", e.message);
+      // addSnackBar("error", e.message);
     }
   })
 

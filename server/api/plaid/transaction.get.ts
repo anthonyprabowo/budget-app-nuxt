@@ -94,63 +94,71 @@ export default defineEventHandler(async (event) => {
   }
 
   const userData = userDoc.data() || {}
-  const accessToken = userData.plaid?.accessToken
+  if(userData.plaid)
+  {
+    const accessToken = userData.plaid?.accessToken
 
-  if (!accessToken) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'User has no linked Plaid access token',
+    if (!accessToken) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'User has no linked Plaid access token',
+      })
+    }
+
+    const { start_date, end_date } = getCurrentMonthDateRange()
+
+    const plaidRes = await plaid.transactionsGet({
+      access_token: accessToken,
+      start_date,
+      end_date,
+      options: {
+        count: 100,
+        offset: 0,
+      },
     })
+
+    const { transactions } = plaidRes.data
+
+    const filtered = transactions.filter((t) => {
+    const primary = t.personal_finance_category?.primary as string | undefined
+    const detailed = t.personal_finance_category?.detailed as string | undefined
+    const categories: string[] = t.category ?? []
+
+    if (primary === 'INCOME') return false
+
+    if (detailed?.includes('DIRECT_DEPOSIT')) return false
+    if (categories.includes('Payroll')) return false
+    if (categories.includes('Direct Deposit')) return false
+
+    // keep everything else
+    return true
+    })
+
+
+    const simplified = filtered.map((t) => ({
+      transactionId: t.transaction_id,
+      name: t.name,
+      amount: t.amount,
+      date: t.date,
+      isoCurrencyCode: t.iso_currency_code,
+      unofficialCurrencyCode: t.unofficial_currency_code,
+      merchantName: t.merchant_name,
+      category: mapPlaidToAppCategory(t),
+      paymentChannel: t.payment_channel,
+      pending: t.pending,
+      accountId: t.account_id,
+    }))
+
+    return {
+      ok: true,
+      start_date,
+      end_date,
+      count: simplified.length,
+      transactions: simplified,
+    }
   }
-
-  const { start_date, end_date } = getCurrentMonthDateRange()
-
-  const plaidRes = await plaid.transactionsGet({
-    access_token: accessToken,
-    start_date,
-    end_date,
-    options: {
-      count: 100,
-      offset: 0,
-    },
-  })
-
-  const { transactions } = plaidRes.data
-
-  const filtered = transactions.filter((t) => {
-  const primary = t.personal_finance_category?.primary as string | undefined
-  const detailed = t.personal_finance_category?.detailed as string | undefined
-  const categories: string[] = t.category ?? []
-
-  if (primary === 'INCOME') return false
-
-  if (detailed?.includes('DIRECT_DEPOSIT')) return false
-  if (categories.includes('Payroll')) return false
-  if (categories.includes('Direct Deposit')) return false
-
-  // keep everything else
-  return true
-  })
-
-
-  const simplified = filtered.map((t) => ({
-    transactionId: t.transaction_id,
-    name: t.name,
-    amount: t.amount,
-    date: t.date,
-    isoCurrencyCode: t.iso_currency_code,
-    unofficialCurrencyCode: t.unofficial_currency_code,
-    merchantName: t.merchant_name,
-    category: mapPlaidToAppCategory(t),
-    paymentChannel: t.payment_channel,
-    pending: t.pending,
-    accountId: t.account_id,
-  }))
-
-  return {
-    start_date,
-    end_date,
-    count: simplified.length,
-    transactions: simplified,
+  else
+  {
+    return { ok: false }
   }
 })
