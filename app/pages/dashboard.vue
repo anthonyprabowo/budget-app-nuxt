@@ -87,7 +87,7 @@
       if(transactions.ok) {
         // @ts-ignore
         transactionData.value = transactions.transactions
-        totalSpend.value = transactionData.value.reduce((sum, tx) => sum + Math.abs(tx.amount), 0)
+        totalSpend.value = transactionData.value.reduce((sum, tx) => sum + tx.amount, 0)
       }
       
       
