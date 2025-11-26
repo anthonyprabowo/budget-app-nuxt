@@ -108,7 +108,7 @@ const categoryTotals = computed<Record<string, number>>(() => {
     if (!totals[t.category]) {
       totals[t.category] = 0
     }
-    totals[t.category]! += Math.abs(t.amount)
+    totals[t.category]! += t.amount
   }
 
   return totals

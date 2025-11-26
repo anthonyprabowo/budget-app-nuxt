@@ -156,9 +156,9 @@ import type { BalanceApi } from '~/types/balance';
                 method: 'GET'
             });
 
-            availableBalance.value = getBalance.accounts.reduce((sum, data) => sum + Math.abs(data.available as number), 0)
+            availableBalance.value = getBalance.accounts.reduce((sum, data) => sum + (data.available as number ?? 0), 0)
 
-            currentBalance.value = getBalance.accounts.reduce((sum, data) => sum + Math.abs(data.current as number), 0)
+            currentBalance.value = getBalance.accounts.reduce((sum, data) => sum + (data.current as number ?? 0), 0)
         }
 
         var getMonthlyBudget = await $fetch<{monthlyBudget: number}>('/api/account/get-user-monthly-budget', {

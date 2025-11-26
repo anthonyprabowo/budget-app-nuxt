@@ -119,6 +119,8 @@ export default defineEventHandler(async (event) => {
 
     const { transactions } = plaidRes.data
 
+    console.log(transactions);
+
     const filtered = transactions.filter((t) => {
       const primary = t.personal_finance_category?.primary as string | undefined
       const detailed = t.personal_finance_category?.detailed as string | undefined

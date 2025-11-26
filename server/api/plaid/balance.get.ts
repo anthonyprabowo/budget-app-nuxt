@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
         .doc(user.uid)
         .set(
             {
-                real_balance: simplified.reduce((sum, data) => sum + Math.abs(data.available as number), 0),
+                real_balance: simplified.reduce((sum, data) => sum + data.available! as number, 0),
                 plaid_balance: simplified,
             },
             { merge: true }
