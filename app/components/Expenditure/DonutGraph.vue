@@ -104,7 +104,8 @@ const categoryTotals = computed<Record<string, number>>(() => {
   const totals: Record<string, number> = {}
 
   for (const t of props.transactionData) {
-    if (!t.category) continue
+    // Skip Zelle credits (negative amounts) from the spending chart
+    if (!t.category || t.amount <= 0) continue
     if (!totals[t.category]) {
       totals[t.category] = 0
     }

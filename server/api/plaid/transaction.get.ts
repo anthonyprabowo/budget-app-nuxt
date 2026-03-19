@@ -88,6 +88,12 @@ function isInternalTransfer(t: any): boolean {
     (txType === 'transfer' && name.includes('money market'))
 }
 
+/** Returns true if the transaction involves Zelle. */
+function isZelleTransaction(t: any): boolean {
+  const name = (t.name || '').toLowerCase()
+  return name.includes('zelle')
+}
+
 
 export default defineEventHandler(async (event) => {
   const uid = getCookie(event, 'uid')
@@ -113,6 +119,7 @@ export default defineEventHandler(async (event) => {
   const { start_date, end_date } = getCurrentMonthDateRange()
   const allExpenses: any[] = []
   const allIncome: any[] = []
+  let zelleReceivedTotal = 0
 
   // Build accountId -> metadata lookup
   const accountLookup: Record<string, { institutionName: string; accountName: string }> = {}
@@ -146,6 +153,7 @@ export default defineEventHandler(async (event) => {
         if (filterAccountId && t.account_id !== filterAccountId) continue
 
         if (isIncomeTransaction(t)) {
+          const isZelle = isZelleTransaction(t)
           allIncome.push({
             transactionId: t.transaction_id,
             name: t.name,
@@ -156,8 +164,34 @@ export default defineEventHandler(async (event) => {
             accountName: lookup.accountName,
             institutionName: lookup.institutionName,
             merchantName: t.merchant_name,
+            // Zelle received offsets spending; paycheck/deposits do not
+            affectsBudget: isZelle,
           })
+
+          // Zelle received also appears as a credit in the transactions table
+          // so it naturally reduces total spending in budget calculations
+          if (isZelle) {
+            zelleReceivedTotal += Math.abs(t.amount)
+            allExpenses.push({
+              transactionId: t.transaction_id,
+              name: t.name,
+              amount: -Math.abs(t.amount),
+              date: t.date,
+              isoCurrencyCode: t.iso_currency_code,
+              unofficialCurrencyCode: t.unofficial_currency_code,
+              merchantName: t.merchant_name,
+              category: 'transfer' as AppCategory,
+              paymentChannel: t.payment_channel,
+              pending: t.pending,
+              accountId: t.account_id,
+              accountName: lookup.accountName,
+              institutionName: lookup.institutionName,
+              isZelle: true,
+              source: 'zelle',
+            })
+          }
         } else if (t.amount > 0) {
+          const isZelle = isZelleTransaction(t)
           allExpenses.push({
             transactionId: t.transaction_id,
             name: t.name,
@@ -172,6 +206,8 @@ export default defineEventHandler(async (event) => {
             accountId: t.account_id,
             accountName: lookup.accountName,
             institutionName: lookup.institutionName,
+            isZelle,
+            source: isZelle ? 'zelle' : undefined,
           })
         }
       }
@@ -190,5 +226,6 @@ export default defineEventHandler(async (event) => {
     count: allExpenses.length,
     transactions: allExpenses,
     income: allIncome,
+    zelleReceivedTotal,
   }
 })

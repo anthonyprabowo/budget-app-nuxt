@@ -23,6 +23,7 @@
       <MainComponentDefaultCard title="Total Spent" icon="mdi-trending-down" icon-color="error">
         <p class="text-h4 font-weight-bold mb-1">{{ transactionData.length > 0 ? formatCurrency(totalSpend) : '-' }}</p>
         <p class="text-body-2 text-grey">{{ percentageCalculation }}% of budget used</p>
+        <p v-if="zelleReceivedTotal > 0" class="text-caption text-green mt-1">Includes {{ formatCurrency(zelleReceivedTotal) }} Zelle credit</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Remaining" icon="mdi-trending-up" icon-color="green">
         <p class="text-h4 font-weight-bold mb-1" :class="{'text-red': totalRemaining < 0}">{{ totalRemaining < 0 ? '-' : '' }}{{ formatCurrency(Math.abs(totalRemaining)) }}</p>
@@ -78,6 +79,7 @@
   const transactionData = ref<TransactionData[]>([]);
   const incomeData = ref<IncomeTransaction[]>([]);
   const balanceAccounts = ref<BalanceApi[]>([]);
+  const zelleReceivedTotal = ref<number>(0);
   const snackbarOpen = ref<boolean>(false);
   const snackbarMessage = ref<string>('');
   const snackbarColor = ref<string>('error');
@@ -94,12 +96,14 @@
         ok: boolean;
         transactions: TransactionData[];
         income?: IncomeTransaction[];
+        zelleReceivedTotal?: number;
       }>('/api/plaid/transaction', { method: "GET" });
 
       if (transactions.ok) {
         transactionData.value = transactions.transactions;
         incomeData.value = transactions.income || [];
-        // Only sum positive amounts (expenses) for budget calculation
+        zelleReceivedTotal.value = transactions.zelleReceivedTotal || 0;
+        // Sum all amounts — includes negative Zelle credits that offset spending
         totalSpend.value = transactionData.value.reduce((sum, tx) => sum + tx.amount, 0);
       }
 

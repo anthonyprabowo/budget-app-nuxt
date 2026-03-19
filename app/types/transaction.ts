@@ -14,6 +14,8 @@ export interface TransactionData {
   accountId: string;
   accountName?: string;
   institutionName?: string;
+  isZelle?: boolean;
+  source?: string;
 }
 
 export interface IncomeTransaction {
@@ -26,6 +28,7 @@ export interface IncomeTransaction {
   accountName?: string;
   institutionName?: string;
   merchantName?: string | null;
+  affectsBudget?: boolean;
 }
 
 export type AppCategory = 'food' | 'shopping' | 'health' | 'entertainment' | 'other' | 'transportation' | 'utilities' | 'transfer'

@@ -1,6 +1,6 @@
 <template>
     <MainComponentDefaultCard title="Income History" title-text-size="h5" icon="mdi-cash-plus" icon-color="green" card-type="outlined" card-color="secondary">
-        <p class="text-body-2 text-grey mb-2">Your monthly income — not included in budget calculations</p>
+        <p class="text-body-2 text-grey mb-2">Your monthly income — Zelle transfers affect budget, other income does not</p>
 
         <v-data-table
             v-if="incomeData.length > 0"
@@ -25,6 +25,9 @@
             <template #item.category="{ item }">
                 <v-chip size="small" variant="tonal" :color="getIncomeCategoryColor(item.category)">
                     {{ formatIncomeCategory(item.category) }}
+                </v-chip>
+                <v-chip v-if="item.affectsBudget" size="x-small" variant="flat" color="orange" class="ml-1">
+                    Affects Budget
                 </v-chip>
             </template>
 

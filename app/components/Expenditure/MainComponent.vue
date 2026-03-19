@@ -54,6 +54,9 @@
                 <v-chip size="small" variant="tonal" :color="getCategoryColor(item.category)">
                     {{ item.category }}
                 </v-chip>
+                <v-chip v-if="item.isZelle" size="x-small" variant="tonal" color="purple" class="ml-1">
+                    Zelle
+                </v-chip>
                 </template>
 
                 <!-- Account -->
@@ -65,7 +68,9 @@
 
                 <!-- Amount -->
                 <template #item.amount="{ item }">
-                {{ formatCurrency(item.amount) }}
+                <span :class="{ 'text-green font-weight-bold': item.amount < 0 }">
+                    {{ item.amount < 0 ? '+' : '' }}{{ formatCurrency(Math.abs(item.amount)) }}
+                </span>
                 </template>
             </v-data-table>
             <p v-else class=" text-primary font-weight-bold d-flex align-center justify-center" style="height: 300px">No Data Found</p>

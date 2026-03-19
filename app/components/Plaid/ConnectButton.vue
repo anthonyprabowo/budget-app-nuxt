@@ -32,21 +32,23 @@ onMounted(async () => {
     token: linkToken.value,
     async onSuccess(public_token, metadata) {
       loading.value = true
+      let accounts = []
       try {
-        await $fetch("/api/plaid/exchange-public-token", {
+        const res = await $fetch("/api/plaid/exchange-public-token", {
           method: "POST",
           body: {
             public_token,
             metadata,
           },
         })
+        accounts = res.accounts || []
         console.log("Saved Plaid access token in Firestore")
       } catch (err) {
         console.error("Error saving Plaid access token:", err)
       } finally {
         loading.value = false
       }
-      emit('refreshSetting');
+      emit('refreshSetting', accounts);
     },
     onExit(err, metadata) {
       console.log("EXIT", err, metadata)

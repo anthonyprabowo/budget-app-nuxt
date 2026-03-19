@@ -86,7 +86,22 @@ export default defineEventHandler(async (event) => {
     { merge: true }
   )
 
+  // Build full accounts list for immediate frontend update
+  const accounts = updatedConnections.flatMap((conn: any) =>
+    (conn.accounts || []).map((acc: any) => ({
+      accountId: acc.id,
+      name: acc.name,
+      mask: acc.mask,
+      type: acc.type,
+      subtype: acc.subtype,
+      institutionId: conn.institutionId,
+      institutionName: conn.institutionName,
+      itemId: conn.itemId,
+    }))
+  )
+
   return {
     ok: true,
+    accounts,
   }
 })

@@ -224,8 +224,12 @@
         monthlyBudget.value = budgetRes.monthlyBudget;
     }
 
-    async function refreshSetting() {
+    async function refreshSetting(accounts?: ConnectedAccount[]) {
         isRefreshing.value = true;
+        // Optimistic update: show new accounts immediately if provided
+        if (accounts && accounts.length > 0) {
+            connectedAccounts.value = accounts;
+        }
         try {
             await getSetting();
         } catch (err: any) {
