@@ -15,6 +15,16 @@
           {{ errorMessage }}
         </v-snackbar>
 
+        <v-alert
+          v-if="sessionExpired"
+          type="warning"
+          variant="tonal"
+          class="mb-4"
+          icon="mdi-clock-alert-outline"
+        >
+          Your session has expired. Please log in again.
+        </v-alert>
+
         <v-btn
           block
           color="primary"
@@ -36,6 +46,7 @@ const snackbarOpen = ref<boolean>(false);
 
 const loading = ref(false);
 const errorMessage = ref("");
+const sessionExpired = computed(() => route.query.expired === 'true');
 
 onMounted(async () => {
   await waitForAuthReady();

@@ -1,6 +1,6 @@
 import { plaid } from '../../utils/plaidApi';
 import { adminDb } from '../../utils/firebaseAdmin';
-import { getUser } from '../../utils/getUser';
+import { getUser, getPlaidConnections } from '../../utils/getUser';
 
 export default defineEventHandler(async (event) => {
     const user = await getUser(event);
@@ -12,86 +12,87 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const accessToken = user.plaid.accessToken;
-    console.log("ACCESS TOKEN: ", accessToken);
-    var plaidRes;
+    const connections = getPlaidConnections(user);
 
-    if(!user.plaid_balance)
-    {
+    if (connections.length === 0) {
+        return { accounts: [] };
+    }
+
+    // Use cached data if available and covers all connections.
+    // Count distinct institution names in cache vs connections to detect staleness.
+    const cachedAccounts = user.plaid_balance;
+    const cachedInstitutions = new Set(
+        (cachedAccounts || []).map((a: any) => a.institutionName).filter(Boolean)
+    );
+    const connInstitutions = new Set(
+        connections.map((c) => c.institutionName).filter(Boolean)
+    );
+    const cacheIsComplete = cachedAccounts
+        && cachedAccounts.length > 0
+        && connInstitutions.size > 0
+        && [...connInstitutions].every((name) => cachedInstitutions.has(name));
+
+    if (cacheIsComplete) {
+        return {
+            accounts: cachedAccounts.map((a: any) => ({
+                accountId: a.accountId || a.account_id,
+                name: a.name,
+                officialName: a.officialName || a.official_name,
+                mask: a.mask,
+                type: a.type,
+                subtype: a.subtype,
+                current: a.current,
+                available: a.available,
+                isoCurrencyCode: a.isoCurrencyCode || a.iso_currency_code,
+                unofficialCurrencyCode: a.unofficialCurrencyCode || a.unofficial_currency_code,
+                institutionName: a.institutionName || null,
+            }))
+        };
+    }
+
+    // Fetch fresh data from all connections
+    const allAccounts: any[] = [];
+
+    for (const conn of connections) {
         try {
-            plaidRes = await plaid.accountsBalanceGet({
-                access_token: accessToken,
-            })
+            const plaidRes = await plaid.accountsBalanceGet({
+                access_token: conn.accessToken,
+            });
+
+            const accounts = plaidRes.data.accounts.map((a) => ({
+                accountId: a.account_id,
+                name: a.name,
+                officialName: a.official_name,
+                mask: a.mask,
+                type: a.type,
+                subtype: a.subtype,
+                current: a.balances.current,
+                available: a.balances.available,
+                isoCurrencyCode: a.balances.iso_currency_code,
+                unofficialCurrencyCode: a.balances.unofficial_currency_code,
+                institutionName: conn.institutionName || null,
+            }));
+
+            allAccounts.push(...accounts);
         } catch (err: any) {
-            if (err.response?.data) {
             console.error(
-                'Plaid /balance error:',
-                JSON.stringify(err.response.data, null, 2),
-            )
-            } else {
-            console.error('Plaid error (no response.data):', err)
-            }
-
-            throw createError({
-            statusCode: 500,
-            statusMessage:
-                err.response?.data?.error_message || 'Plaid balance create failed',
-            data: err.response?.data,
-            })
+                `Plaid /balance error for ${conn.institutionName}:`,
+                err.response?.data || err
+            );
+            // Continue with other connections instead of failing entirely
         }
+    }
 
-        const accounts = plaidRes.data.accounts
-
-        const simplified = accounts.map((a) => ({
-            accountId: a.account_id,
-            name: a.name,
-            officialName: a.official_name,
-            mask: a.mask,
-            type: a.type,
-            subtype: a.subtype,
-            current: a.balances.current,
-            available: a.balances.available,
-            isoCurrencyCode: a.balances.iso_currency_code,
-            unofficialCurrencyCode: a.balances.unofficial_currency_code,
-        }))
-
-
-        await adminDb.collection('users')
+    // Cache results in Firestore
+    await adminDb.collection('users')
         .doc(user.uid)
         .set(
             {
-                real_balance: simplified.reduce((sum, data) => sum + data.available! as number, 0),
-                plaid_balance: simplified,
+                real_balance: allAccounts.reduce((sum, a) => sum + (a.available ?? 0), 0),
+                plaid_balance: allAccounts,
             },
             { merge: true }
-        )
-        return {
-            accounts: simplified
-        }
-    }
-    else
-    {
-        console.log("Plaid balance is defined!")
+        );
 
-        const simplified = user.plaid_balance.map((a: any) => ({
-            accountId: a.account_id,
-            name: a.name,
-            officialName: a.official_name,
-            mask: a.mask,
-            type: a.type,
-            subtype: a.subtype,
-            current: a.current,
-            available: a.available,
-            isoCurrencyCode: a.iso_currency_code,
-            unofficialCurrencyCode: a.unofficial_currency_code,
-        }))
-
-        return {
-            accounts: simplified
-        }
-    }
-
-    
-
-    
+    return { accounts: allAccounts };
 })

@@ -12,6 +12,22 @@ export interface TransactionData {
   paymentChannel?: string;
   pending?: boolean;
   accountId: string;
+  accountName?: string;
+  institutionName?: string;
 }
 
-export type AppCategory = 'food' | 'shopping' | 'health' | 'entertainment' | 'other' | 'transportation' | 'utilities'
+export interface IncomeTransaction {
+  transactionId: string;
+  name: string;
+  amount: number;
+  date: string;
+  category: IncomeCategory;
+  accountId: string;
+  accountName?: string;
+  institutionName?: string;
+  merchantName?: string | null;
+}
+
+export type AppCategory = 'food' | 'shopping' | 'health' | 'entertainment' | 'other' | 'transportation' | 'utilities' | 'transfer'
+
+export type IncomeCategory = 'payroll' | 'zelle' | 'direct_deposit' | 'transfer_in' | 'other_income'

@@ -39,4 +39,11 @@ export default defineNuxtConfig({
   ],
   plugins: ['~/plugins/vuetify.ts'],
   components: true,
+  app: {
+    head: {
+      script: [
+        { key: 'plaid-link', src: 'https://cdn.plaid.com/link/v2/stable/link-initialize.js', defer: true },
+      ],
+    },
+  },
 })

@@ -18,7 +18,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!isLoggedIn.value) {
     return navigateTo({
       path: "/",
-      query: { redirect: to.fullPath },
+      query: {
+        redirect: to.fullPath,
+        ...(to.query.expired ? { expired: 'true' } : {}),
+      },
     });
   }
 });

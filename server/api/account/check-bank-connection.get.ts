@@ -1,4 +1,4 @@
-import { getUser } from "~~/server/utils/getUser";
+import { getUser, getPlaidConnections } from "~~/server/utils/getUser";
 
 export default defineEventHandler(async (event) => {
     var user = await getUser(event);
@@ -10,5 +10,6 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    return { verified: user.plaid && user.plaid.access_token !== '' }
+    const connections = getPlaidConnections(user);
+    return { verified: connections.length > 0 }
 })

@@ -25,8 +25,7 @@
         <p class="text-body-2 text-grey">{{ percentageCalculation }}% of budget used</p>
       </MainComponentDefaultCard>
       <MainComponentDefaultCard title="Remaining" icon="mdi-trending-up" icon-color="green">
-        <p class="text-h4 font-weight-bold mb-1" :class="{'text-red': totalRemaining < 0}">{{ totalRemaining < 0 ? '-' : '' }}{{ formatCurrency(totalRemaining) }}</p>
-        <!-- If over budget, the text becomes "Over budget" -->
+        <p class="text-h4 font-weight-bold mb-1" :class="{'text-red': totalRemaining < 0}">{{ totalRemaining < 0 ? '-' : '' }}{{ formatCurrency(Math.abs(totalRemaining)) }}</p>
         <p class="text-body-2 text-grey">{{ totalRemaining < 0 ? 'Over budget' : 'Left to spend' }}</p>
       </MainComponentDefaultCard>
     </div>
@@ -40,36 +39,45 @@
         </div>
       </MainComponentDefaultCard>
     </div>
+
+    <!-- Spending Power Section -->
+    <v-divider class="my-2"></v-divider>
+    <div class="mb-4">
+      <SpendingPowerMainComponent :accounts="balanceAccounts" />
+    </div>
+
     <v-divider class="my-2"></v-divider>
     <div class="mb-2">
       <p class="text-h4 font-weight-bold mb-2">Expenditure</p>
       <ExpenditureMainComponent :transaction-data="transactionData"/>
     </div>
-    <div>
+    <div class="mb-4">
       <ExpenditureDonutGraph :transaction-data="transactionData" />
+    </div>
+
+    <!-- Income History Section -->
+    <v-divider class="my-2"></v-divider>
+    <div class="mb-4">
+      <IncomeHistory :income-data="incomeData" />
     </div>
   </BasicMain>
 </template>
 
 <script lang="ts" setup>
-  import type { TransactionData } from '~/types/transaction';
-  import type { FetchError } from 'ofetch';
+  import type { TransactionData, IncomeTransaction } from '~/types/transaction';
+  import type { BalanceApi } from '~/types/balance';
 
   definePageMeta({
     middleware: 'auth'
   })
 
-  useHead({
-    script: [
-      {
-        src: "https://cdn.plaid.com/link/v2/stable/link-initialize.js",
-        defer: true
-      }
-    ]
-  })
-  
+
+
+  const { apiFetch } = useApiFetch();
 
   const transactionData = ref<TransactionData[]>([]);
+  const incomeData = ref<IncomeTransaction[]>([]);
+  const balanceAccounts = ref<BalanceApi[]>([]);
   const snackbarOpen = ref<boolean>(false);
   const snackbarMessage = ref<string>('');
   const snackbarColor = ref<string>('error');
@@ -81,30 +89,35 @@
 
   onMounted(async () => {
     try {
-      var transactions = await $fetch('/api/plaid/transaction', {
-        method: "GET",
-      });
-      if(transactions.ok) {
-        // @ts-ignore
-        transactionData.value = transactions.transactions
-        totalSpend.value = transactionData.value.reduce((sum, tx) => sum + tx.amount, 0)
+      // Fetch transactions (expenses + income)
+      const transactions = await apiFetch<{
+        ok: boolean;
+        transactions: TransactionData[];
+        income?: IncomeTransaction[];
+      }>('/api/plaid/transaction', { method: "GET" });
+
+      if (transactions.ok) {
+        transactionData.value = transactions.transactions;
+        incomeData.value = transactions.income || [];
+        // Only sum positive amounts (expenses) for budget calculation
+        totalSpend.value = transactionData.value.reduce((sum, tx) => sum + tx.amount, 0);
       }
-      
-      
 
-      var budget = await $fetch<{monthlyBudget: number}>('/api/account/get-user-monthly-budget', {
-        method: 'GET'
-      })
-
-      monthlyBudget.value = budget.monthlyBudget
+      // Fetch budget
+      const budget = await apiFetch<{ monthlyBudget: number }>('/api/account/get-user-monthly-budget', { method: 'GET' });
+      monthlyBudget.value = budget.monthlyBudget;
 
       totalRemaining.value = monthlyBudget.value - totalSpend.value;
-      percentageCalculation.value = ((totalSpend.value/(monthlyBudget.value === 0 ? 1 : monthlyBudget.value)) * 100).toFixed(2)
-    }
-    catch(err) {
-      const e = err as FetchError
-      console.log(e.statusCode);
-      // addSnackBar("error", e.message);
+      percentageCalculation.value = ((totalSpend.value / (monthlyBudget.value === 0 ? 1 : monthlyBudget.value)) * 100).toFixed(2);
+
+      // Fetch balances for spending power
+      const balanceRes = await apiFetch<{ accounts: BalanceApi[] }>('/api/plaid/balance', { method: 'GET' });
+      balanceAccounts.value = balanceRes.accounts;
+    } catch (err: any) {
+      console.error(err);
+      if (err.message !== 'Your session has expired. Please log in again.') {
+        addSnackBar("error", err.message || 'Failed to load dashboard data');
+      }
     }
   })
 

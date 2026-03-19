@@ -1,17 +1,32 @@
 <template>
     <div>
-        <!-- Overlay -->
-
         <!-- Button -->
         <div class="text-center mb-4">
             <v-btn color="secondary" class="font-weight-bold"><v-icon icon="mdi-plus-circle-outline" class="mr-4" size="x-large" />Add Expenses</v-btn>
         </div>
         <MainComponentDefaultCard title="Recent Transaction" title-text-size="h5" card-type="outlined" card-color="secondary">
             <p class="text-body-2 text-grey mb-2">Your monthly transaction</p>
+
+            <!-- Account filter -->
+            <v-select
+                v-if="accountOptions.length > 1"
+                v-model="selectedAccountId"
+                :items="accountOptions"
+                item-title="label"
+                item-value="value"
+                label="Filter by account"
+                variant="outlined"
+                density="compact"
+                class="mb-4"
+                style="max-width: 350px;"
+                clearable
+                hide-details
+            />
+
             <v-data-table
-                v-if="transactionData.length > 0"
+                v-if="filteredTransactions.length > 0"
                 :headers="headers"
-                :items="transactionData"
+                :items="filteredTransactions"
                 :items-per-page="5"
                 mobile-breakpoint="sm"
                 class="text-body-2"
@@ -36,7 +51,16 @@
 
                 <!-- Category -->
                 <template #item.category="{ item }">
-                {{ item.category }}
+                <v-chip size="small" variant="tonal" :color="getCategoryColor(item.category)">
+                    {{ item.category }}
+                </v-chip>
+                </template>
+
+                <!-- Account -->
+                <template #item.account="{ item }">
+                <v-chip size="small" variant="outlined" color="purple-accent-1">
+                    {{ item.institutionName || 'N/A' }}
+                </v-chip>
                 </template>
 
                 <!-- Amount -->
@@ -61,10 +85,32 @@
         }
     })
 
+    const selectedAccountId = ref<string | null>(null);
+
+    const accountOptions = computed(() => {
+        const seen = new Map<string, string>();
+        for (const t of props.transactionData) {
+            if (t.accountId && !seen.has(t.accountId)) {
+                seen.set(t.accountId, t.institutionName || t.accountName || t.accountId);
+            }
+        }
+        const options = [{ label: 'All Accounts', value: '' }];
+        for (const [id, name] of seen) {
+            options.push({ label: name, value: id });
+        }
+        return options;
+    });
+
+    const filteredTransactions = computed(() => {
+        if (!selectedAccountId.value) return props.transactionData;
+        return props.transactionData.filter(t => t.accountId === selectedAccountId.value);
+    });
+
     const headers = [
         { title: 'Date',        key: 'date' },
         { title: 'Description', key: 'description' },
         { title: 'Category',    key: 'category' },
+        { title: 'Account',     key: 'account' },
         { title: 'Amount',      key: 'amount' },
     ];
 
@@ -81,9 +127,24 @@
             case 'transportation':
                 return 'mdi-car-outline'
             case 'utilities':
-                return 'mdi-lightning-bold-outline'
+                return 'mdi-lightning-bolt-outline'
+            case 'transfer':
+                return 'mdi-swap-horizontal'
             default:
                 return ''
+        }
+    }
+
+    function getCategoryColor(category: string): string {
+        switch(category) {
+            case 'food': return 'green'
+            case 'shopping': return 'blue'
+            case 'health': return 'red'
+            case 'entertainment': return 'purple'
+            case 'transportation': return 'orange'
+            case 'utilities': return 'yellow'
+            case 'transfer': return 'cyan'
+            default: return 'grey'
         }
     }
 </script>

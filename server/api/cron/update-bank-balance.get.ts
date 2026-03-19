@@ -1,5 +1,6 @@
 import { plaid } from '../../utils/plaidApi'
 import { adminDb } from '../../utils/firebaseAdmin'
+import { getPlaidConnections } from '../../utils/getUser'
 
 export default defineEventHandler(async (event) => {
     console.log('Cron job running at', new Date().toISOString());
@@ -21,56 +22,46 @@ export default defineEventHandler(async (event) => {
     }))
 
     for(const user of users) {
-        // @ts-ignore ignore firestore type checking
-        if(!user.plaid) {
-            continue;
-        }
+        const connections = getPlaidConnections(user)
+        if (connections.length === 0) continue;
 
-        var plaidRes;
-        try {
-            plaidRes = await plaid.accountsBalanceGet({
-                // @ts-ignore
-                access_token: user.plaid.accessToken,
-            })
-        } catch (err: any) {
-            if (err.response?.data) {
-            console.error(
-                'Plaid /cron/update-bank-balance error:',
-                JSON.stringify(err.response.data, null, 2),
-            )
-            } else {
-            console.error('Plaid error (no response.data):', err)
+        const allAccounts: any[] = [];
+
+        for (const conn of connections) {
+            try {
+                const plaidRes = await plaid.accountsBalanceGet({
+                    access_token: conn.accessToken,
+                })
+
+                const accounts = plaidRes.data.accounts.map((a) => ({
+                    accountId: a.account_id,
+                    name: a.name,
+                    officialName: a.official_name,
+                    mask: a.mask,
+                    type: a.type,
+                    subtype: a.subtype,
+                    current: a.balances.current,
+                    available: a.balances.available,
+                    isoCurrencyCode: a.balances.iso_currency_code,
+                    unofficialCurrencyCode: a.balances.unofficial_currency_code,
+                    institutionName: conn.institutionName || null,
+                }))
+
+                allAccounts.push(...accounts)
+            } catch (err: any) {
+                console.error(
+                    `Plaid /cron/update-bank-balance error for ${conn.institutionName}:`,
+                    err.response?.data || err
+                )
             }
-
-            throw createError({
-            statusCode: 500,
-            statusMessage:
-                err.response?.data?.error_message || 'Plaid balance create failed',
-            data: err.response?.data,
-            })
         }
-
-        const accounts = plaidRes.data.accounts;
-        const simplified = accounts.map((a) => ({
-            accountId: a.account_id,
-            name: a.name,
-            officialName: a.official_name,
-            mask: a.mask,
-            type: a.type,
-            subtype: a.subtype,
-            current: a.balances.current,
-            available: a.balances.available,
-            isoCurrencyCode: a.balances.iso_currency_code,
-            unofficialCurrencyCode: a.balances.unofficial_currency_code,
-        }))
 
         await adminDb.collection('users')
-        // @ts-ignore
-        .doc(user.uid)
+        .doc(user.id)
         .set(
             {
-                real_balance: simplified.reduce((sum, data) => (data.available as number ?? 0), 0),
-                plaid_balance: simplified,
+                real_balance: allAccounts.reduce((sum, a) => sum + (a.available ?? 0), 0),
+                plaid_balance: allAccounts,
             },
             { merge: true }
         )
