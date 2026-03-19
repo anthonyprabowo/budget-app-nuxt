@@ -205,22 +205,27 @@
     })
 
     async function getSetting() {
+        // Add cache-busting timestamp to avoid stale GET responses
+        const t = Date.now();
+
         // Fetch connected accounts
-        const accountsRes = await apiFetch<{ accounts: ConnectedAccount[] }>('/api/plaid/accounts', { method: 'GET' });
+        const accountsRes = await apiFetch<{ accounts: ConnectedAccount[] }>(`/api/plaid/accounts?t=${t}`, { method: 'GET' });
         connectedAccounts.value = accountsRes.accounts;
 
         // Fetch balances if there are connected accounts (non-fatal — accounts list updates regardless)
         if (connectedAccounts.value.length > 0) {
             try {
-                const balanceRes = await apiFetch<{ accounts: BalanceApi[] }>('/api/plaid/balance', { method: 'GET' });
+                const balanceRes = await apiFetch<{ accounts: BalanceApi[] }>(`/api/plaid/balance?t=${t}`, { method: 'GET' });
                 balanceAccounts.value = balanceRes.accounts;
             } catch (err: any) {
                 console.error('Balance fetch failed:', err);
             }
+        } else {
+            balanceAccounts.value = [];
         }
 
         // Fetch monthly budget
-        const budgetRes = await apiFetch<{ monthlyBudget: number }>('/api/account/get-user-monthly-budget', { method: 'GET' });
+        const budgetRes = await apiFetch<{ monthlyBudget: number }>(`/api/account/get-user-monthly-budget?t=${t}`, { method: 'GET' });
         monthlyBudget.value = budgetRes.monthlyBudget;
     }
 
@@ -249,6 +254,11 @@
                 method: 'POST',
                 body: { itemId },
             });
+            // Optimistic removal: immediately update the UI
+            connectedAccounts.value = connectedAccounts.value.filter(a => a.itemId !== itemId);
+            if (connectedAccounts.value.length === 0) {
+                balanceAccounts.value = [];
+            }
             addSnackBar('success', 'Bank account disconnected');
             await getSetting();
         } catch (err: any) {
