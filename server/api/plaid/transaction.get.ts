@@ -4,6 +4,8 @@ import { adminDb } from '../../utils/firebaseAdmin'
 import { getCookie, getQuery } from 'h3'
 import { type AppCategory, type IncomeCategory } from '../../../app/types/transaction'
 import { getPlaidConnections } from '../../utils/getUser'
+import { categorizeTransaction, type CategorizationResult } from '../../utils/pocketCategorizer'
+import type { PocketType, PocketCategory } from '../../../app/types/pocket'
 
 function getCurrentMonthDateRange() {
   const today = new Date()
@@ -121,6 +123,21 @@ export default defineEventHandler(async (event) => {
   const allIncome: any[] = []
   let zelleReceivedTotal = 0
 
+  // Load user overrides and merchant mappings for pocket categorization
+  const overridesSnap = await adminDb.collection('users').doc(uid).collection('transaction_overrides').get()
+  const userOverrides = new Map<string, { pocket: PocketType; pocketCategory: PocketCategory }>()
+  for (const doc of overridesSnap.docs) {
+    const data = doc.data()
+    userOverrides.set(doc.id, { pocket: data.pocket, pocketCategory: data.pocketCategory })
+  }
+
+  const mappingsSnap = await adminDb.collection('users').doc(uid).collection('merchant_mappings').get()
+  const merchantMappings = new Map<string, { pocket: PocketType; pocketCategory: PocketCategory }>()
+  for (const doc of mappingsSnap.docs) {
+    const data = doc.data()
+    merchantMappings.set(doc.id, { pocket: data.pocket, pocketCategory: data.pocketCategory })
+  }
+
   // Build accountId -> metadata lookup
   const accountLookup: Record<string, { institutionName: string; accountName: string }> = {}
   for (const conn of connections) {
@@ -188,10 +205,29 @@ export default defineEventHandler(async (event) => {
               institutionName: lookup.institutionName,
               isZelle: true,
               source: 'zelle',
+              pocket: 'basic_needs' as PocketType,
+              pocketCategory: 'rent' as PocketCategory,
+              pocketConfidence: 'high',
+              pocketMatchedBy: 'merchant_rule',
             })
           }
         } else if (t.amount > 0) {
           const isZelle = isZelleTransaction(t)
+
+          // Categorize into pocket
+          const pocketResult = categorizeTransaction(
+            {
+              name: t.name,
+              merchantName: t.merchant_name,
+              personal_finance_category: t.personal_finance_category as any,
+              category: t.category as any,
+              amount: t.amount,
+            },
+            userOverrides,
+            merchantMappings,
+            t.transaction_id,
+          )
+
           allExpenses.push({
             transactionId: t.transaction_id,
             name: t.name,
@@ -208,6 +244,11 @@ export default defineEventHandler(async (event) => {
             institutionName: lookup.institutionName,
             isZelle,
             source: isZelle ? 'zelle' : undefined,
+            pocket: pocketResult.pocket,
+            pocketCategory: pocketResult.pocketCategory,
+            pocketConfidence: pocketResult.confidence,
+            pocketMatchedBy: pocketResult.matchedBy,
+            isOverride: pocketResult.matchedBy === 'user_override',
           })
         }
       }

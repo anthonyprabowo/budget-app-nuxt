@@ -47,6 +47,16 @@
       <SpendingPowerMainComponent :accounts="balanceAccounts" />
     </div>
 
+    <!-- 3-Pocket Budget Breakdown -->
+    <v-divider class="my-2"></v-divider>
+    <div class="mb-4">
+      <PocketPocketOverview :pocket-summaries="pocketSummaries" />
+    </div>
+
+    <div class="mb-4">
+      <PocketPocketDonutChart :pocket-summaries="pocketSummaries" />
+    </div>
+
     <v-divider class="my-2"></v-divider>
     <div class="mb-2">
       <p class="text-h4 font-weight-bold mb-2">Expenditure</p>
@@ -67,6 +77,7 @@
 <script lang="ts" setup>
   import type { TransactionData, IncomeTransaction } from '~/types/transaction';
   import type { BalanceApi } from '~/types/balance';
+  import type { PocketSummary } from '~/types/pocket';
 
   definePageMeta({
     middleware: 'auth'
@@ -75,6 +86,7 @@
 
 
   const { apiFetch } = useApiFetch();
+  const { buildPocketSummaries } = usePocketBudget();
 
   const transactionData = ref<TransactionData[]>([]);
   const incomeData = ref<IncomeTransaction[]>([]);
@@ -87,6 +99,7 @@
   const totalSpend = ref<number>(0);
   const totalRemaining = ref<number>(0);
   const percentageCalculation = ref<string>('');
+  const pocketSummaries = ref<PocketSummary[]>([]);
   const { formatCurrency } = useCurrency();
 
   onMounted(async () => {
@@ -113,6 +126,9 @@
 
       totalRemaining.value = monthlyBudget.value - totalSpend.value;
       percentageCalculation.value = ((totalSpend.value / (monthlyBudget.value === 0 ? 1 : monthlyBudget.value)) * 100).toFixed(2);
+
+      // Build pocket summaries from transactions + income
+      pocketSummaries.value = buildPocketSummaries(transactionData.value, monthlyBudget.value);
 
       // Fetch balances for spending power
       const balanceRes = await apiFetch<{ accounts: BalanceApi[] }>('/api/plaid/balance', { method: 'GET' });

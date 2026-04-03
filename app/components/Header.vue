@@ -8,6 +8,9 @@
                 <nuxt-link :to="'/dashboard'">
                     <v-btn variant="elevated" class="font-weight-bold" color="secondary">Dashboard</v-btn>
                 </nuxt-link>
+                <nuxt-link :to="'/transactions'">
+                    <v-btn variant="text" class="font-weight-bold" color="white">Transactions</v-btn>
+                </nuxt-link>
                 <nuxt-link :to="'/setting'">
                     <v-icon color="white">mdi-cog-outline</v-icon>
                 </nuxt-link>

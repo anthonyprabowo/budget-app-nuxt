@@ -1,7 +1,7 @@
 // middleware/auth.ts
 export default defineNuxtRouteMiddleware(async (to) => {
   // Only protect these routes
-  const protectedRoutes = ["/dashboard", "/setting"];
+  const protectedRoutes = ["/dashboard", "/setting", "/transactions"];
 
   // If route doesn't start with any of them, skip
   if (!protectedRoutes.some(path => to.path.startsWith(path))) {

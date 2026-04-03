@@ -16,6 +16,13 @@ export interface TransactionData {
   institutionName?: string;
   isZelle?: boolean;
   source?: string;
+
+  // 3-pocket budget fields
+  pocket?: import('./pocket').PocketType;
+  pocketCategory?: import('./pocket').PocketCategory;
+  pocketConfidence?: 'high' | 'medium' | 'low';
+  pocketMatchedBy?: string;
+  isOverride?: boolean;
 }
 
 export interface IncomeTransaction {

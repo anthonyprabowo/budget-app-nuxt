@@ -59,6 +59,13 @@
                 </v-chip>
                 </template>
 
+                <!-- Pocket -->
+                <template #item.pocket="{ item }">
+                  <v-chip v-if="item.pocket" size="x-small" variant="tonal" :color="getPocketChipColor(item.pocket)">
+                    {{ getPocketShortLabel(item.pocket) }}
+                  </v-chip>
+                </template>
+
                 <!-- Account -->
                 <template #item.account="{ item }">
                 <v-chip size="small" variant="outlined" color="purple-accent-1">
@@ -115,6 +122,7 @@
         { title: 'Date',        key: 'date' },
         { title: 'Description', key: 'description' },
         { title: 'Category',    key: 'category' },
+        { title: 'Pocket',      key: 'pocket' },
         { title: 'Account',     key: 'account' },
         { title: 'Amount',      key: 'amount' },
     ];
@@ -150,6 +158,24 @@
             case 'utilities': return 'yellow'
             case 'transfer': return 'cyan'
             default: return 'grey'
+        }
+    }
+
+    function getPocketChipColor(pocket: string): string {
+        switch(pocket) {
+            case 'basic_needs': return 'green'
+            case 'investment': return 'blue'
+            case 'self_reward': return 'purple'
+            default: return 'grey'
+        }
+    }
+
+    function getPocketShortLabel(pocket: string): string {
+        switch(pocket) {
+            case 'basic_needs': return 'Needs'
+            case 'investment': return 'Invest'
+            case 'self_reward': return 'Reward'
+            default: return pocket
         }
     }
 </script>
