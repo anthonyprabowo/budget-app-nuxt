@@ -148,12 +148,57 @@ export function usePocketBudget() {
     return icons[category] ?? 'mdi-help-circle-outline'
   }
 
+  /**
+   * Filter transactions to a specific month/year.
+   */
+  function getTransactionsByMonth(
+    transactions: TransactionData[],
+    month: number,
+    year: number,
+  ): TransactionData[] {
+    return transactions.filter(t => {
+      const d = new Date(t.date)
+      return d.getMonth() + 1 === month && d.getFullYear() === year
+    })
+  }
+
+  /**
+   * Calculate pocket breakdown from transactions and budget.
+   * Returns summaries + totals in one call.
+   */
+  function calculatePocketBreakdown(
+    transactions: TransactionData[],
+    monthlyBudget: number,
+  ) {
+    const summaries = buildPocketSummaries(transactions, monthlyBudget)
+    const totalSpent = summaries.reduce((sum, p) => sum + p.spentAmount, 0)
+    return {
+      pockets: summaries,
+      totalSpent: Math.round(totalSpent * 100) / 100,
+      totalRemaining: Math.round((monthlyBudget - totalSpent) * 100) / 100,
+      totalBudget: monthlyBudget,
+    }
+  }
+
+  /**
+   * Get a single pocket's summary from a list of summaries.
+   */
+  function getPocketSummary(
+    summaries: PocketSummary[],
+    pocketName: PocketType,
+  ): PocketSummary | undefined {
+    return summaries.find(s => s.type === pocketName)
+  }
+
   return {
     POCKET_META,
     CATEGORY_LABELS,
     calculatePocketBudgets,
     buildPocketSummaries,
     buildMonthlyBreakdown,
+    getTransactionsByMonth,
+    calculatePocketBreakdown,
+    getPocketSummary,
     getPocketColor,
     getPocketIcon,
     getPocketLabel,

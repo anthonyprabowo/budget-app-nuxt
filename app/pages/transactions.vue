@@ -373,15 +373,20 @@ async function saveOverride() {
 async function loadTransactions() {
   loading.value = true
   try {
+    const month = currentDate.value.getMonth() + 1
+    const year = currentDate.value.getFullYear()
+
     const res = await apiFetch<{
       ok: boolean
       transactions: TransactionData[]
       income?: any[]
       zelleReceivedTotal?: number
-    }>('/api/plaid/transaction', { method: 'GET' })
+    }>(`/api/plaid/transaction?month=${month}&year=${year}`, { method: 'GET' })
 
     if (res.ok) {
       transactionData.value = res.transactions
+    } else {
+      transactionData.value = []
     }
 
     const budgetRes = await apiFetch<{ monthlyBudget: number }>('/api/account/get-user-monthly-budget', { method: 'GET' })

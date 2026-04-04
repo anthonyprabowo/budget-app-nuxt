@@ -1,7 +1,16 @@
 <template>
   <div>
-    <p class="text-h4 font-weight-bold mb-2">Budget Pockets</p>
-    <p class="text-body-2 text-grey mb-4">Your income is split into 3 pockets using the 50/30/20 rule</p>
+    <div class="d-flex justify-space-between align-center mb-2">
+      <div>
+        <p class="text-h4 font-weight-bold">Budget Pockets</p>
+        <p class="text-body-2 text-grey">Your income is split into 3 pockets using the 50/30/20 rule</p>
+      </div>
+      <NuxtLink to="/transactions">
+        <v-btn variant="text" color="secondary" size="small" append-icon="mdi-arrow-right">
+          View All Transactions
+        </v-btn>
+      </NuxtLink>
+    </div>
 
     <div class="d-block d-sm-flex ga-2 align-stretch justify-space-between mb-4">
       <MainComponentDefaultCard
@@ -9,13 +18,18 @@
         :key="pocket.type"
         :title="pocket.label"
         :icon="pocket.icon"
-        :icon-color="pocket.color"
+        :icon-color="pocketProgressColor(pocket)"
       >
-        <div class="d-flex justify-space-between align-center mb-2">
+        <!-- Spent vs Budget headline -->
+        <div class="d-flex justify-space-between align-center mb-1">
           <p class="text-h5 font-weight-bold">{{ formatCurrency(pocket.spentAmount) }}</p>
-          <v-chip size="small" variant="tonal" :color="pocket.color">{{ pocket.percentage }}%</v-chip>
+          <v-chip size="small" variant="tonal" :color="pocketProgressColor(pocket)">
+            {{ pocketPercentUsed(pocket).toFixed(0) }}% used
+          </v-chip>
         </div>
+        <p class="text-caption text-grey mb-2">of {{ formatCurrency(pocket.budgetAmount) }} budget ({{ pocket.percentage }}%)</p>
 
+        <!-- Progress bar -->
         <v-progress-linear
           :model-value="pocketPercentUsed(pocket)"
           :height="10"
@@ -24,6 +38,7 @@
           class="mb-2"
         />
 
+        <!-- Remaining -->
         <div class="d-flex justify-space-between align-center">
           <p class="text-caption text-grey">
             {{ formatCurrency(pocket.spentAmount) }} / {{ formatCurrency(pocket.budgetAmount) }}

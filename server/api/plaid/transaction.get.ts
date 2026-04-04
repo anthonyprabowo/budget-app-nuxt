@@ -22,6 +22,32 @@ function getCurrentMonthDateRange() {
   }
 }
 
+/**
+ * Build a date range for a specific month/year.
+ * If the requested month is the current month, end_date = today.
+ * Otherwise, end_date = last day of the requested month.
+ */
+function getMonthDateRange(month: number, year: number) {
+  const now = new Date()
+  const start = new Date(year, month - 1, 1) // month is 1-indexed from query
+  let end: Date
+
+  if (year === now.getFullYear() && month - 1 === now.getMonth()) {
+    // Current month → end at today
+    end = now
+  } else {
+    // Past month → end at last day of that month
+    end = new Date(year, month, 0) // day 0 of next month = last day of this month
+  }
+
+  const format = (d: Date) => d.toISOString().slice(0, 10)
+
+  return {
+    start_date: format(start),
+    end_date: format(end),
+  }
+}
+
 function mapPlaidToAppCategory(t: any): AppCategory {
   const primary = t.personal_finance_category?.primary as string | undefined
   const categories: string[] = t.category ?? []
@@ -106,6 +132,16 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const filterAccountId = query.accountId as string | undefined
 
+  // Parse optional month/year from query params (default to current month)
+  const now = new Date()
+  const queryMonth = query.month ? parseInt(query.month as string, 10) : now.getMonth() + 1
+  const queryYear = query.year ? parseInt(query.year as string, 10) : now.getFullYear()
+
+  // Validate month/year
+  if (queryMonth < 1 || queryMonth > 12 || queryYear < 2000 || queryYear > 2100) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid month or year' })
+  }
+
   const userDoc = await adminDb.collection('users').doc(uid).get()
   if (!userDoc.exists) {
     throw createError({ statusCode: 404, statusMessage: 'User not found' })
@@ -118,7 +154,7 @@ export default defineEventHandler(async (event) => {
     return { ok: false, transactions: [], income: [] }
   }
 
-  const { start_date, end_date } = getCurrentMonthDateRange()
+  const { start_date, end_date } = getMonthDateRange(queryMonth, queryYear)
   const allExpenses: any[] = []
   const allIncome: any[] = []
   let zelleReceivedTotal = 0
@@ -262,6 +298,8 @@ export default defineEventHandler(async (event) => {
 
   return {
     ok: true,
+    month: queryMonth,
+    year: queryYear,
     start_date,
     end_date,
     count: allExpenses.length,
