@@ -50,11 +50,11 @@
     <!-- 3-Pocket Budget Breakdown -->
     <v-divider class="my-2"></v-divider>
     <div class="mb-4">
-      <PocketPocketOverview :pocket-summaries="pocketSummaries" />
+      <PocketOverview :pocket-summaries="pocketSummaries" />
     </div>
 
     <div class="mb-4">
-      <PocketPocketDonutChart :pocket-summaries="pocketSummaries" />
+      <PocketDonutChart :pocket-summaries="pocketSummaries" />
     </div>
 
     <v-divider class="my-2"></v-divider>
