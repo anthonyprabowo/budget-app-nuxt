@@ -15,6 +15,7 @@ const authReady = ref(false);
 const ALLOWED_EMAILS = [
   "anthonyprabowo@gmail.com",
   "soetadi.hellosharon@gmail.com",
+  "chris.yungmoney@gmail.com"
 ];
 
 function isEmailAllowed(email: string | null | undefined) {
